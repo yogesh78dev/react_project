@@ -1,18 +1,38 @@
 import React from "react";
-import { Container, Typography, TextField, Button, Grid } from "@mui/material";
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  InputLabel,
+  OutlinedInput,
+  InputAdornment,
+  FormControl,
+} from "@mui/material";
 import axios from "axios";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+import IconButton from "@mui/material/IconButton";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 function Login() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const [user, setUser] = React.useState(null);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const navigate = useNavigate();
 
-  const login = async () => {
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
+  const login = async (e) => {
+    e.preventDefault(); // Prevent default form submission
     setLoading(true);
     try {
       const response = await axios.post(
@@ -22,7 +42,6 @@ function Login() {
           password: password,
         }
       );
-
       handleLoginSuccess(response.data);
     } catch (error) {
       handleLoginError(error);
@@ -32,14 +51,9 @@ function Login() {
   };
 
   const handleLoginSuccess = (data) => {
-    setUser(data);
-    localStorage.setItem("user", JSON.stringify(data));
-    // Debugging statement to ensure the function is called
-    console.log(
-      "User data set and localStorage updated, redirecting to home page..."
-    );
-
-    navigate("/about");
+    localStorage.setItem("userData", JSON.stringify(data));
+    console.log("User Login Success..");
+    navigate("/", { replace: true }); // Redirect to home page
   };
 
   const handleLoginError = (error) => {
@@ -63,15 +77,32 @@ function Login() {
               />
             </Grid>
             <Grid item xs={12} md={12}>
-              <TextField
-                label="Password"
-                type="password"
-                variant="outlined"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                fullWidth
-                required
-              />
+              <FormControl variant="outlined" fullWidth required>
+                <InputLabel htmlFor="outlined-adornment-password">
+                  Password
+                </InputLabel>
+                <OutlinedInput
+                  id="outlined-adornment-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  fullWidth
+                  required
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  label="Password"
+                />
+              </FormControl>
             </Grid>
             <Grid item xs={12} md={12}>
               <Button
@@ -92,18 +123,6 @@ function Login() {
         </form>
         <Grid item xs={12}>
           {loading && <Typography variant="h6">Loading...</Typography>}
-        </Grid>
-        <Grid item xs={12}>
-          {user && <Typography variant="h6">Welcome {user.name}</Typography>}
-          {user && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setUser(null)}
-            >
-              Logout
-            </Button>
-          )}
         </Grid>
       </Container>
     </div>
